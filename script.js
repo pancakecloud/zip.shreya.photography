@@ -65,3 +65,10 @@ document.addEventListener("keydown", (e) => {
     lightbox.classList.remove("active");
   }
 });
+
+if (window.innerWidth > 768) {
+  window.addEventListener("scroll", () => {
+    const scrollY = window.scrollY;
+    horizontal.style.transform = `translateX(-${scrollY}px)`;
+  });
+}
