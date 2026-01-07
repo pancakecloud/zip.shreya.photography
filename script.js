@@ -1,49 +1,77 @@
+const loader = document.getElementById("loader");
 const horizontal = document.getElementById("horizontal");
-  const scrollContainer = document.querySelector(".scroll-container");
-  const grid = document.getElementById("imageGrid");
+const scrollContainer = document.querySelector(".scroll-container");
+const grid = document.getElementById("imageGrid");
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightboxImg");
 
-  const TOTAL_IMAGES = 40;
+const TOTAL_IMAGES = 40;
+let loadedImages = 0;
 
-  // Create images automatically
+// 🔒 Lock scroll initially
+document.documentElement.style.overflow = "hidden";
+document.body.style.overflow = "hidden";
+
+// ----------------------------
+// CREATE IMAGES + TRACK LOAD
+// ----------------------------
 for (let i = 1; i <= TOTAL_IMAGES; i++) {
   const img = document.createElement("img");
-
   img.src = `images/${i}.jpg`;
-  img.decoding = "async"; // safe to keep
+  img.decoding = "async";
 
   img.onload = () => {
+    loadedImages++;
+
     if (img.naturalHeight > img.naturalWidth) {
-      img.className = "v";
+      img.classList.add("v");
     } else {
-      img.className = "h";
+      img.classList.add("h");
     }
+
+    // ✅ When ALL images are loaded
+    if (loadedImages === TOTAL_IMAGES) {
+      setTimeout(() => {
+        loader.classList.add("hidden");
+
+        // 🔓 Restore scroll
+        document.documentElement.style.overflow = "auto";
+        document.body.style.overflow = "auto";
+      }, 400);
+    }
+  };
+
+  img.onerror = () => {
+    loadedImages++;
   };
 
   grid.appendChild(img);
 }
 
+// ----------------------------
+// HORIZONTAL SCROLL LOGIC
+// ----------------------------
+function updateScroll() {
+  const totalScroll =
+    horizontal.scrollWidth - window.innerWidth;
 
-  function updateScroll() {
-    const totalScroll =
-      horizontal.scrollWidth - window.innerWidth;
+  const scrollTop = window.scrollY;
+  const scrollHeight =
+    scrollContainer.offsetHeight - window.innerHeight;
 
-    const scrollTop = window.scrollY;
-    const scrollHeight =
-      scrollContainer.offsetHeight - window.innerHeight;
+  const progress = scrollTop / scrollHeight;
+  const translateX = -totalScroll * progress;
 
-    const progress = scrollTop / scrollHeight;
-    const translateX = -totalScroll * progress;
+  horizontal.style.transform = `translateX(${translateX}px)`;
+}
 
-    horizontal.style.transform = `translateX(${translateX}px)`;
-  }
-
+if (window.innerWidth > 768) {
   window.addEventListener("scroll", updateScroll);
-  window.addEventListener("resize", () => location.reload());
+}
 
-  const lightbox = document.getElementById("lightbox");
-const lightboxImg = document.getElementById("lightboxImg");
-
-// Click any image to open
+// ----------------------------
+// LIGHTBOX
+// ----------------------------
 document.addEventListener("click", (e) => {
   if (e.target.tagName === "IMG" && e.target.closest(".grid")) {
     lightboxImg.src = e.target.src;
@@ -51,14 +79,10 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Click anywhere to close
 lightbox.addEventListener("click", () => {
   lightbox.classList.remove("active");
   lightboxImg.src = "";
 });
-
-document.body.style.overflow = "hidden";
-document.body.style.overflow = "";
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
@@ -66,9 +90,7 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-if (window.innerWidth > 768) {
-  window.addEventListener("scroll", () => {
-    const scrollY = window.scrollY;
-    horizontal.style.transform = `translateX(-${scrollY}px)`;
-  });
-}
+// ----------------------------
+// RESIZE
+// ----------------------------
+window.addEventListener("resize", () => location.reload());
